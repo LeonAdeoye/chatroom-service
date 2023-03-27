@@ -1,18 +1,20 @@
 package com.leon.models;
 
+import java.util.UUID;
+
 public class User
 {
-	private String id;
+	private UUID id;
 	private String fullName;
 	private boolean isActive;
 	private boolean isValid;
 
-	public String getId()
+	public UUID getId()
 	{
 		return id;
 	}
 
-	public void setId(String id)
+	public void setId(UUID id)
 	{
 		this.id = id;
 	}
@@ -47,7 +49,7 @@ public class User
 		this.isValid = isValid;
 	}
 
-	public User(String id, String fullName, boolean isActive, boolean isValid)
+	public User(UUID id, String fullName, boolean isActive, boolean isValid)
 	{
 		this.id = id;
 		this.fullName = fullName;

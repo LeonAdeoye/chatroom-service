@@ -2,15 +2,13 @@ package com.leon.controllers;
 
 import com.leon.models.*;
 import com.leon.services.RoomService;
-import com.leon.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
@@ -20,8 +18,6 @@ public class RoomController
 
 	@Autowired
 	RoomService roomService;
-	@Autowired
-	UserService userService;
 
 	@CrossOrigin
 	@RequestMapping("/heartbeat")
@@ -112,7 +108,7 @@ public class RoomController
 			return;
 		}
 
-		if(this.userService.isValidAuthor(chatMessage.getAuthor()))
+		if(this.roomService.isValidAuthor(chatMessage.getAuthor()))
 		{
 			logger.info("Received request to add chat message: " + chatMessage);
 			this.roomService.addChat(chatMessage);
@@ -255,5 +251,56 @@ public class RoomController
 
 		logger.info("Received request to remove an admin with ID: " + adminId + " from a room with ID: " + roomId);
 		this.roomService.removeAdmin(roomId, adminId);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/roomsWithMembership", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	List<UUID> getRoomsWithMembership(String userId)
+	{
+		if(userId.isEmpty() || userId == null)
+		{
+			logger.error("userId cannot be null or an empty string when requesting a list of rooms with membership.");
+			return new ArrayList<>();
+		}
+
+		logger.info("Received request to get list of rooms for which user: " + userId + " has membership.");
+		return roomService.getRoomsWithMembership(userId);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/readTimestamps", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	Map<UUID, LocalDateTime> getReadTimestamps(String userId)
+	{
+
+		if(userId.isEmpty() || userId == null)
+		{
+			logger.error("userId cannot be null or an empty string when requesting a map of rooms and their read timestamps.");
+			return new HashMap<>();
+		}
+
+		logger.info("Received request to get map of rooms and their read timestamps for user: " + userId);
+		return this.roomService.getReadTimestamps(userId);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/users", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE)
+	List<User> getAllUsers()
+	{
+		logger.info("Received request to get this list of all users.");
+		return this.roomService.getAllUsers();
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/addUser", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	void addUser(String fullName)
+	{
+		if(fullName.isEmpty() || fullName == null)
+		{
+			logger.error("fullName cannot be null or an empty string when adding a new user.");
+			return;
+		}
+
+		logger.info("Received request to add user with full name: " + fullName);
+		this.roomService.addUser(fullName);
 	}
 }

@@ -1,17 +1,20 @@
 package com.leon.services;
 
 import com.leon.models.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomServiceImpl implements RoomService
 {
 	private static final Logger logger = LoggerFactory.getLogger(RoomServiceImpl.class);
 	private Map<UUID, Room> roomsMap = new HashMap<>();
+	private List<User> users = new ArrayList<>();
 
 	@Override
 	public void addRoom(Room room)
@@ -192,5 +195,51 @@ public class RoomServiceImpl implements RoomService
 			logger.error("Room with room Id: " + roomUUID + " does not exists.");
 
 		return new Conversation();
+	}
+
+	@Override
+	public List<UUID> getRoomsWithMembership(String userId)
+	{
+		return roomsMap.values().stream()
+			.filter(room -> room.getMembers().contains(UUID.fromString(userId)))
+			.map(Room::getId)
+			.collect(Collectors.toList());
+	}
+
+	@Override
+	public Room getRoom(String roomId)
+	{
+		UUID roomUUID = UUID.fromString(roomId);
+		if(roomsMap.containsKey(roomUUID))
+			return roomsMap.get(roomUUID);
+		else
+		{
+			logger.error("Room with ID: " + roomId + " does not exist.");
+			return new Room();
+		}
+	}
+
+	@Override
+	public Map<UUID, LocalDateTime> getReadTimestamps(String userId)
+	{
+		return new HashMap<>();
+	}
+
+	@Override
+	public List<User> getAllUsers()
+	{
+		return this.users;
+	}
+
+	@Override
+	public boolean isValidAuthor(UUID authorId)
+	{
+		return true;
+	}
+
+	@Override
+	public void addUser(String fullName)
+	{
+		this.users.add(new User(UUID.randomUUID(), fullName, false, false));
 	}
 }

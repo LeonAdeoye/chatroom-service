@@ -116,6 +116,19 @@ public class Room
 		this.members.add(user);
 	}
 
+	public Room()
+	{
+		this.id = UUID.randomUUID();
+		this.roomName = "";
+		this.owner = "";
+		this.members = new ArrayList<>();
+		this.isPrivate = false;
+		this.isValid = false;
+		this.conversation = new Conversation();
+		this.administrators = new ArrayList<>();
+		this.activities = new ArrayList<>();
+	}
+
 	public Room(UUID id, String roomName, String owner, boolean isPrivate, boolean isValid)
 	{
 		this.id = id;
