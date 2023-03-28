@@ -4,7 +4,6 @@ import com.leon.models.*;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,12 +21,18 @@ public class RoomServiceImpl implements RoomService
 		if(roomsMap.containsKey(room.getId()))
 		{
 			logger.error("Room with room Id: " + room.getId() + " already exists.");
+			return;
 		}
-		else
+
+		if(users.stream().filter(user -> user.getId().equals(room.getOwnerId())).count() == 0)
 		{
-			Room newRoom = new Room(UUID.randomUUID(), room.getRoomName(), room.getOwner(), room.isPrivate(), true);
-			roomsMap.put(newRoom.getId(), newRoom);
+			logger.error("Room owner with user Id: " + room.getOwnerId() + " does not exists.");
+			return;
 		}
+
+		Room newRoom = new Room(room.getRoomName(), room.getOwnerId());
+		newRoom.addAdministrator(room.getOwnerId());
+		roomsMap.put(newRoom.getId(), newRoom);
 	}
 
 	@Override
@@ -49,16 +54,21 @@ public class RoomServiceImpl implements RoomService
 		UUID roomUUID = UUID.fromString(roomId);
 		UUID adminUUID = UUID.fromString(adminId);
 
-		if(roomsMap.containsKey(roomUUID))
+		if(!roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			if(existingRoom.getAdministrators().stream().filter(adminId::equals).count() == 0)
-				logger.error("Room with Id: " + roomId + " does not have an administrator with Id: " + adminId);
-			else
-				existingRoom.getAdministrators().removeIf(adminUUID::equals);
-		}
-		else
 			logger.error("Room with room Id: " + roomId + " does not exists.");
+			return;
+		}
+
+		Room existingRoom = roomsMap.get(roomUUID);
+		if(existingRoom.getAdministrators().stream().filter(adminId::equals).count() == 0)
+		{
+			logger.error("Room with Id: " + roomId + " does not have an administrator with Id: " + adminId);
+			return;
+		}
+
+		existingRoom.getAdministrators().removeIf(adminUUID::equals);
+		existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_ADMIN, adminUUID));
 	}
 
 	@Override
@@ -67,16 +77,21 @@ public class RoomServiceImpl implements RoomService
 		UUID roomUUID = UUID.fromString(roomId);
 		UUID newAdminUUID = UUID.fromString(newAdminId);
 
-		if(roomsMap.containsKey(roomUUID))
+		if(!roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			if(existingRoom.getAdministrators().stream().filter(newAdminUUID::equals).count() != 0)
-				logger.error("Room with Id: " + roomId + " does not have an administrator with Id: " + newAdminId);
-			else
-				existingRoom.addAdministrator(newAdminUUID);
-		}
-		else
 			logger.error("Room with room Id: " + roomId + " does not exists.");
+			return;
+		}
+
+		Room existingRoom = roomsMap.get(roomUUID);
+		if(existingRoom.getAdministrators().stream().filter(newAdminId::equals).count() != 0)
+		{
+			logger.error("Administrator with id: " + newAdminId + " already exists in room with Id: " + roomId);
+			return;
+		}
+
+		existingRoom.addAdministrator(newAdminUUID);
+		existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID));
 	}
 
 	@Override
@@ -87,32 +102,42 @@ public class RoomServiceImpl implements RoomService
 
 		if(roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			if(existingRoom.getMembers().stream().filter(newMemberUUID::equals).count() != 0)
-				logger.error("Room with Id: " + roomId + " does not have a member with Id: " + newMemberId);
-			else
-				existingRoom.addMember(newMemberUUID);
-		}
-		else
 			logger.error("Room with room Id: " + roomId + " does not exists.");
+			return;
+		}
+
+		Room existingRoom = roomsMap.get(roomUUID);
+		if(existingRoom.getMembers().stream().filter(newMemberUUID::equals).count() != 0)
+		{
+			logger.error("Room with Id: " + roomId + " does not have a member with Id: " + newMemberId);
+			return;
+		}
+
+		existingRoom.addMember(newMemberUUID);
+		existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_MEMBER, newMemberUUID));
 	}
 
 	@Override
 	public void removeMember(String roomId, String memberId)
 	{
 		UUID roomUUID = UUID.fromString(roomId);
-		UUID adminUUID = UUID.fromString(memberId);
+		UUID memberUUID = UUID.fromString(memberId);
 
-		if(roomsMap.containsKey(roomUUID))
+		if(!roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			if(existingRoom.getMembers().stream().filter(memberId::equals).count() == 0)
-				logger.error("Room with Id: " + roomId + " does not have a member with Id: " + memberId);
-			else
-				existingRoom.getMembers().removeIf(adminUUID::equals);
-		}
-		else
 			logger.error("Room with room Id: " + roomId + " does not exists.");
+			return;
+		}
+
+		Room existingRoom = roomsMap.get(roomUUID);
+		if(existingRoom.getMembers().stream().filter(memberId::equals).count() == 0)
+		{
+			logger.error("Room with Id: " + roomId + " does not have a member with Id: " + memberId);
+			return;
+		}
+
+		existingRoom.getMembers().removeIf(memberUUID::equals);
+		existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_MEMBER, memberUUID));
 	}
 
 	@Override
@@ -142,30 +167,23 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public List<Activity> getActivities(String roomId, int startOffset, int endOffset)
-	{
-		UUID roomUUID = UUID.fromString(roomId);
-
-		// TODO filter between the two offsets.
-		if(roomsMap.containsKey(roomUUID))
-			return roomsMap.get(roomUUID).getActivities();
-		else
-			logger.error("Room with room Id: " + roomId + " does not exists.");
-
-		return new ArrayList<>();
-	}
-
-	@Override
 	public void addChat(ChatMessage chatMessage)
 	{
 		UUID roomUUID = chatMessage.getRoomId();
-		if(roomsMap.containsKey(roomUUID))
+		if(!roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			existingRoom.addChatMessage(chatMessage);
-		}
-		else
 			logger.error("Room with room Id: " + roomUUID + " does not exists.");
+			return;
+		}
+
+		Room existingRoom = roomsMap.get(roomUUID);
+		if(!existingRoom.getMembers().contains(chatMessage.getAuthorId()) && !existingRoom.getAdministrators().contains(chatMessage.getAuthorId()))
+		{
+			logger.error("Author with Id: " + chatMessage.getAuthorId() + " is not a member or an administrator of room with Id: " + roomUUID);
+			return;
+		}
+
+		existingRoom.addChatMessage(chatMessage);
 	}
 
 	@Override
@@ -185,16 +203,15 @@ public class RoomServiceImpl implements RoomService
 	public Conversation getConversation(String roomId, int startOffset, int endOffset)
 	{
 		UUID roomUUID = UUID.fromString(roomId);
-		if(roomsMap.containsKey(roomUUID))
+		if(!roomsMap.containsKey(roomUUID))
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			// TODO filter between the two offsets.
-			return existingRoom.getConversation();
-		}
-		else
 			logger.error("Room with room Id: " + roomUUID + " does not exists.");
+			return new Conversation();
+		}
 
-		return new Conversation();
+		// TODO filter between the two offsets.
+		Room existingRoom = roomsMap.get(roomUUID);
+		return existingRoom.getConversation();
 	}
 
 	@Override
@@ -232,14 +249,14 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean isValidAuthor(UUID authorId)
+	public List<UUID> getAllRooms()
 	{
-		return true;
+		return roomsMap.keySet().stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public void addUser(String fullName)
 	{
-		this.users.add(new User(UUID.randomUUID(), fullName, false, false));
+		this.users.add(new User(fullName));
 	}
 }

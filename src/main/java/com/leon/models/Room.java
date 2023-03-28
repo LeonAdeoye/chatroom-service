@@ -8,7 +8,7 @@ public class Room
 {
 	private UUID id;
 	private String roomName;
-	private String owner;
+	private UUID ownerId;
 	private List<UUID> members;
 	private boolean isPrivate;
 	private boolean isValid;
@@ -46,14 +46,14 @@ public class Room
 		this.roomName = roomName;
 	}
 
-	public String getOwner()
+	public UUID getOwnerId()
 	{
-		return owner;
+		return ownerId;
 	}
 
-	public void setOwner(String owner)
+	public void setOwnerId(UUID ownerId)
 	{
-		this.owner = owner;
+		this.ownerId = ownerId;
 	}
 
 	public List<UUID> getMembers()
@@ -120,7 +120,7 @@ public class Room
 	{
 		this.id = UUID.randomUUID();
 		this.roomName = "";
-		this.owner = "";
+		this.ownerId = UUID.randomUUID();
 		this.members = new ArrayList<>();
 		this.isPrivate = false;
 		this.isValid = false;
@@ -129,17 +129,36 @@ public class Room
 		this.activities = new ArrayList<>();
 	}
 
-	public Room(UUID id, String roomName, String owner, boolean isPrivate, boolean isValid)
+	public Room(UUID id, String roomName, UUID owner, boolean isPrivate, boolean isValid)
 	{
 		this.id = id;
 		this.roomName = roomName;
-		this.owner = owner;
+		this.ownerId = owner;
 		this.members = new ArrayList<>();
 		this.isPrivate = isPrivate;
 		this.isValid = isValid;
 		this.conversation = new Conversation();
 		this.administrators = new ArrayList<>();
 		this.activities = new ArrayList<>();
+	}
+
+	public Room(String roomName, UUID owner)
+	{
+		this.id = UUID.randomUUID();
+		this.roomName = roomName;
+		this.ownerId = owner;
+		this.members = new ArrayList<>();
+		this.isPrivate = false;
+		this.isValid = true;
+		this.conversation = new Conversation();
+		this.administrators = new ArrayList<>();
+		this.activities = new ArrayList<>();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "Room{" + "id=" + id + ", roomName='" + roomName + '\'' + ", ownerId='" + ownerId + '\'' + ", members=" + members + ", isPrivate=" + isPrivate + ", isValid=" + isValid + ", conversation=" + conversation + ", administrators=" + administrators + ", activities=" + activities + '}';
 	}
 
 	public void addChatMessage(ChatMessage chatMessage)

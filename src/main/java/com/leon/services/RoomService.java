@@ -1,7 +1,6 @@
 package com.leon.services;
 
 import com.leon.models.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +24,6 @@ public interface RoomService
 
 	List<UUID> getMembers(String roomId);
 
-	List<Activity> getActivities(String roomId, int startOffset, int endOffset);
-
 	void addChat(ChatMessage chatMessage);
 
 	void deactivateRoom(String roomId);
@@ -43,5 +40,5 @@ public interface RoomService
 
 	void addUser(String fullName);
 
-	boolean isValidAuthor(UUID authorId);
+	List<UUID> getAllRooms();
 }

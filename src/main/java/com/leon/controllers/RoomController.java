@@ -42,9 +42,9 @@ public class RoomController
 			return;
 		}
 
-		if(room.getOwner() == null || room.getOwner().isEmpty())
+		if(room.getOwnerId() == null)
 		{
-			logger.error("room owner cannot be null or an empty string when adding a room.");
+			logger.error("room owner cannot be null and must be a valid UUID");
 			return;
 		}
 
@@ -53,10 +53,18 @@ public class RoomController
 	}
 
 	@CrossOrigin
+	@RequestMapping(value = "/rooms", method={GET})
+	List<UUID> getAllRooms()
+	{
+		logger.info("Received request to get list of all rooms.");
+		return this.roomService.getAllRooms();
+	}
+
+	@CrossOrigin
 	@RequestMapping(value = "/deactivateRoom", method={PUT}, consumes= MediaType.APPLICATION_JSON_VALUE)
 	void deactivateRoom(@RequestParam String roomId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when deactivating a room.");
 			return;
@@ -66,11 +74,19 @@ public class RoomController
 		this.roomService.deactivateRoom(roomId);
 	}
 
-	Conversation getConversation(String roomId, int startOffset, int endOffset)
+	@CrossOrigin
+	@RequestMapping(value = "/conversation", method={GET}, produces=MediaType.APPLICATION_JSON_VALUE)
+	Conversation getConversation(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the conversation for a room with Id: " + roomId + " and start offset: " + startOffset + " end offset: " + endOffset);
+			return new Conversation();
+		}
+
+		if(startOffset > endOffset)
+		{
+			logger.error("Start offset: " + startOffset + " cannot be greater than the end offset: " + endOffset + " for room with Id: " + roomId);
 			return new Conversation();
 		}
 
@@ -88,8 +104,7 @@ public class RoomController
 			return;
 		}
 
-		// TODO author ID is a UUID. Review
-		if(chatMessage.getAuthor() == null)
+		if(chatMessage.getAuthorId() == null)
 		{
 			logger.error("Invalid author ID used to add chat.");
 			return;
@@ -101,41 +116,21 @@ public class RoomController
 			return;
 		}
 
-		// TODO room ID is a UUID. Review.
 		if(chatMessage.getRoomId() == null)
 		{
 			logger.error("Invalid room cannot be used to create chat message.");
 			return;
 		}
 
-		if(this.roomService.isValidAuthor(chatMessage.getAuthor()))
-		{
-			logger.info("Received request to add chat message: " + chatMessage);
-			this.roomService.addChat(chatMessage);
-		}
-		else
-			logger.error("Invalid author with id: " + chatMessage.getAuthor() + " is used to create chat message.");
+		logger.info("Received request to add chat message: " + chatMessage);
+		this.roomService.addChat(chatMessage);
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/activities", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	List<Activity> getActivities(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
-	{
-		if(roomId.isEmpty() || roomId == null)
-		{
-			logger.error("roomId cannot be null or an empty string when getting the list of activities for a room with Id: " + roomId + " and start offset: " + startOffset + " end offset: " + endOffset);
-			return new ArrayList<>();
-		}
-
-		logger.info("Received request to get the list of activities of a room with ID: " + roomId + " with start offset: " + startOffset + " and end offset: " + endOffset);
-		return this.roomService.getActivities(roomId, startOffset, endOffset);
-	}
-
-	@CrossOrigin
-	@RequestMapping(value = "/members", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/members", method={GET})
 	List<UUID> getMembers(@RequestParam String roomId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when requesting the list of members of a room.");
 			return new ArrayList<>();
@@ -146,10 +141,10 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/admins", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/admins", method={GET})
 	List<UUID> getAdministrators(@RequestParam String roomId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the list of administrators.");
 			return new ArrayList<>();
@@ -163,7 +158,7 @@ public class RoomController
 	@RequestMapping(value = "/memberCount", method={GET} )
 	int getMemberCount(@RequestParam String roomId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the membership count of a room");
 			return 0;
@@ -174,16 +169,16 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/addMember", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE )
+	@RequestMapping(value = "/addMember", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
 	void addMember(@RequestParam String roomId, @RequestParam String newMemberId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding a new member to a room.");
 			return;
 		}
 
-		if(newMemberId.isEmpty() || newMemberId == null)
+		if(newMemberId == null || newMemberId.isEmpty())
 		{
 			logger.error("newMemberId cannot be null or an empty string when adding a new member to a room.");
 			return;
@@ -197,13 +192,13 @@ public class RoomController
 	@RequestMapping(value = "/removeMember", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
 	void removeMember(@RequestParam String roomId, @RequestParam String memberId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when removing a member from a room.");
 			return;
 		}
 
-		if(memberId.isEmpty() || memberId == null)
+		if(memberId == null || memberId.isEmpty())
 		{
 			logger.error("memberId cannot be null or an empty string when removing a member from a room.");
 			return;
@@ -217,13 +212,13 @@ public class RoomController
 	@RequestMapping(value = "/addAdmin", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE )
 	void addAdmin(@RequestParam String roomId, @RequestParam String newAdminId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding admin to a room.");
 			return;
 		}
 
-		if(newAdminId.isEmpty() || newAdminId == null)
+		if(newAdminId == null || newAdminId.isEmpty())
 		{
 			logger.error("newAdminId cannot be null or an empty string when adding admin to a room.");
 			return;
@@ -237,13 +232,13 @@ public class RoomController
 	@RequestMapping(value = "/removeAdmin", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
 	void removeAdmin(@RequestParam String roomId, @RequestParam String adminId)
 	{
-		if(roomId.isEmpty() || roomId == null)
+		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when removing an admin from a room.");
 			return;
 		}
 
-		if(adminId.isEmpty() || adminId == null)
+		if(adminId == null || adminId.isEmpty())
 		{
 			logger.error("adminId cannot be null or an empty string when removing an admin from a room.");
 			return;
@@ -257,7 +252,7 @@ public class RoomController
 	@RequestMapping(value = "/roomsWithMembership", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
 	List<UUID> getRoomsWithMembership(String userId)
 	{
-		if(userId.isEmpty() || userId == null)
+		if(userId == null || userId.isEmpty())
 		{
 			logger.error("userId cannot be null or an empty string when requesting a list of rooms with membership.");
 			return new ArrayList<>();
@@ -269,10 +264,9 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/readTimestamps", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	Map<UUID, LocalDateTime> getReadTimestamps(String userId)
+	Map<UUID, LocalDateTime> getReadTimestamps(@RequestParam String userId)
 	{
-
-		if(userId.isEmpty() || userId == null)
+		if(userId == null || userId.isEmpty())
 		{
 			logger.error("userId cannot be null or an empty string when requesting a map of rooms and their read timestamps.");
 			return new HashMap<>();
@@ -283,18 +277,18 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/users", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/users", method={GET})
 	List<User> getAllUsers()
 	{
-		logger.info("Received request to get this list of all users.");
+		logger.info("Received request to get list of all users.");
 		return this.roomService.getAllUsers();
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/addUser", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	void addUser(String fullName)
+	@RequestMapping(value = "/addUser", method={POST})
+	void addUser(@RequestParam String fullName)
 	{
-		if(fullName.isEmpty() || fullName == null)
+		if(fullName == null || fullName.isEmpty())
 		{
 			logger.error("fullName cannot be null or an empty string when adding a new user.");
 			return;
