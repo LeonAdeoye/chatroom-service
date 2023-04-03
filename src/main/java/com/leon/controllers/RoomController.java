@@ -81,22 +81,27 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/conversation", method={GET}, produces=MediaType.APPLICATION_JSON_VALUE)
-	Conversation getConversation(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
+	ResponseEntity<Conversation> getConversation(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the conversation for a room with Id: " + roomId + " and start offset: " + startOffset + " end offset: " + endOffset);
-			return new Conversation();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Conversation());
 		}
 
 		if(startOffset > endOffset)
 		{
 			logger.error("Start offset: " + startOffset + " cannot be greater than the end offset: " + endOffset + " for room with Id: " + roomId);
-			return new Conversation();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Conversation());
 		}
 
 		logger.info("Received request to get the conversation of a room with ID: " + roomId + " with start offset: " + startOffset + " and end offset: " + endOffset);
-		return this.roomService.getConversation(roomId, startOffset, endOffset);
+		Optional<Conversation> result = this.roomService.getConversation(roomId, startOffset, endOffset);
+
+		if(result.isPresent())
+			return ResponseEntity.status(HttpStatus.OK).body(this.roomService.getConversation(roomId, startOffset, endOffset).get());
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Conversation());
 	}
 
 	@CrossOrigin

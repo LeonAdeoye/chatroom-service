@@ -209,18 +209,25 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public Conversation getConversation(String roomId, int startOffset, int endOffset)
+	public Optional<Conversation> getConversation(String roomId, int startOffset, int endOffset)
 	{
-		UUID roomUUID = UUID.fromString(roomId);
-		if(!roomsMap.containsKey(roomUUID))
+		try
 		{
-			logger.error("Room with room Id: " + roomUUID + " does not exists.");
-			return new Conversation();
+			UUID roomUUID = UUID.fromString(roomId);
+			if(roomsMap.containsKey(roomUUID))
+			{
+				// TODO filter between the two offsets.
+				Room existingRoom = roomsMap.get(roomUUID);
+				return Optional.of(existingRoom.getConversation());
+			}
+			else
+				logger.error("Room with room Id: " + roomUUID + " does not exists.");
 		}
-
-		// TODO filter between the two offsets.
-		Room existingRoom = roomsMap.get(roomUUID);
-		return existingRoom.getConversation();
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+		}
+		return Optional.empty();
 	}
 
 	@Override
