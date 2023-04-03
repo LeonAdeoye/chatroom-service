@@ -5,7 +5,9 @@ import com.leon.services.RoomService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -61,17 +63,20 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/deactivateRoom", method={PUT}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void deactivateRoom(@RequestParam String roomId)
+	@RequestMapping(value = "/deactivateRoom", method={PUT})
+	ResponseEntity<String> deactivateRoom(@RequestParam String roomId)
 	{
+		boolean result;
 		if(roomId == null || roomId.isEmpty())
-		{
 			logger.error("roomId cannot be null or an empty string when deactivating a room.");
-			return;
-		}
 
 		logger.info("Received request to deactivate room with ID: " + roomId);
-		this.roomService.deactivateRoom(roomId);
+		result = this.roomService.deactivateRoom(roomId);
+
+		if(result)
+			return ResponseEntity.status(HttpStatus.OK).body("Deactivated room with ID: " +  roomId);
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not find room with ID: " + roomId);
 	}
 
 	@CrossOrigin

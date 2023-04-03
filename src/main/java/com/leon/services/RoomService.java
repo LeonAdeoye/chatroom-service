@@ -26,7 +26,7 @@ public interface RoomService
 
 	void addChat(ChatMessage chatMessage);
 
-	void deactivateRoom(String roomId);
+	boolean deactivateRoom(String roomId);
 
 	Conversation getConversation(String roomId, int startOffset, int endOffset);
 

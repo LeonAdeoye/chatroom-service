@@ -187,16 +187,25 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public void deactivateRoom(String roomId)
+	public boolean deactivateRoom(String roomId)
 	{
-		UUID roomUUID = UUID.fromString(roomId);
-		if(roomsMap.containsKey(roomUUID))
+		try
 		{
-			Room existingRoom = roomsMap.get(roomUUID);
-			existingRoom.setValid(false);
+			UUID roomUUID = UUID.fromString(roomId);
+			if(roomsMap.containsKey(roomUUID))
+			{
+				Room existingRoom = roomsMap.get(roomUUID);
+				existingRoom.setValid(false);
+				return true;
+			}
+			else
+				logger.error("Room with room Id: " + roomUUID + " does not exists.");
 		}
-		else
-			logger.error("Room with room Id: " + roomUUID + " does not exists.");
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+		}
+		return false;
 	}
 
 	@Override
