@@ -20,7 +20,7 @@ public class RoomController
 	RoomService roomService;
 
 	@CrossOrigin
-	@RequestMapping("/heartbeat")
+	@RequestMapping(value = "/heartbeat", method={GET})
 	String heartbeat()
 	{
 		return "Here I am";
