@@ -65,6 +65,14 @@ public class User
 		this.isValid = true;
 	}
 
+	public User()
+	{
+		this.id = UUID.randomUUID();
+		this.fullName = "";
+		this.isActive = true;
+		this.isValid = true;
+	}
+
 	@Override
 	public String toString()
 	{

@@ -23,43 +23,56 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/heartbeat", method={GET})
-	String heartbeat()
+	ResponseEntity<String> heartbeat()
 	{
-		return "Here I am";
+		return ResponseEntity.ok("I am here!");
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/reload", method={GET})
+	ResponseEntity<String> reload()
+	{
+		this.roomService.reload();
+		return ResponseEntity.ok("Successfully reloaded data from store.");
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/addRoom", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void addRoom(@RequestBody Room room)
+	ResponseEntity<String> addRoom(@RequestBody Room room)
 	{
 		if(room == null)
 		{
 			logger.error("room cannot be null when adding a room.");
-			return;
+			return ResponseEntity.badRequest().body("room cannot be null when adding a room.");
 		}
 
 		if(room.getRoomName() == null || room.getRoomName().isEmpty())
 		{
 			logger.error("roomName cannot be null or an empty string when adding a room.");
-			return;
+			return ResponseEntity.badRequest().body("roomName cannot be null or an empty string when adding a room.");
 		}
 
 		if(room.getOwnerId() == null)
 		{
 			logger.error("room owner cannot be null and must be a valid UUID");
-			return;
+			return ResponseEntity.badRequest().body("room owner cannot be null and must be a valid UUID");
 		}
 
 		logger.info("Received request to add room: " + room);
-		this.roomService.addRoom(room);
+		boolean result = this.roomService.addRoom(room);
+
+		if(result)
+			return ResponseEntity.ok("Successfully added room with name: " + room.getRoomName() + " that is owned by" + room.getOwnerId());
+		else
+			return ResponseEntity.badRequest().body("Unable to add room with name: " + room.getRoomName() + " that is owned by: " + room.getOwnerId());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/rooms", method={GET})
-	List<UUID> getAllRooms()
+	ResponseEntity<List<UUID>> getAllRooms()
 	{
 		logger.info("Received request to get list of all rooms.");
-		return this.roomService.getAllRooms();
+		return ResponseEntity.ok(this.roomService.getAllRooms());
 	}
 
 	@CrossOrigin
@@ -133,8 +146,12 @@ public class RoomController
 		}
 
 		logger.info("Received request to add chat message: " + chatMessage);
-		this.roomService.addChat(chatMessage);
-		return ResponseEntity.ok("New chat message created and added to conversation");
+		boolean result = this.roomService.addChat(chatMessage);
+
+		if(result)
+			return ResponseEntity.ok("Successfully created new chat message and added to conversation in room with ID: " + chatMessage.getRoomId());
+		else
+			return ResponseEntity.badRequest().body("Unable to add chat message to the conversation in room with ID: " + chatMessage.getRoomId());
 	}
 
 	@CrossOrigin
@@ -177,145 +194,189 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/memberCount", method={GET} )
-	int getMemberCount(@RequestParam String roomId)
+	ResponseEntity<Integer> getMemberCount(@RequestParam String roomId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the membership count of a room");
-			return 0;
+			return ResponseEntity.badRequest().body(0);
 		}
 
 		logger.info("Received request to get the membership count for a room with ID: " + roomId);
-		return this.roomService.getMemberCount(roomId);
+		int result = this.roomService.getMemberCount(roomId);
+
+		if(result == -1)
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(0);
+
+		if(result == -2)
+			return ResponseEntity.badRequest().body(0);
+
+		return ResponseEntity.ok(result);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/addMember", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void addMember(@RequestParam String roomId, @RequestParam String newMemberId)
+	ResponseEntity<String> addMember(@RequestParam String roomId, @RequestParam String newMemberId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding a new member to a room.");
-			return;
+			return ResponseEntity.badRequest().body("roomId cannot be null or an empty string when adding a new member to a room.");
 		}
 
 		if(newMemberId == null || newMemberId.isEmpty())
 		{
 			logger.error("newMemberId cannot be null or an empty string when adding a new member to a room.");
-			return;
+			return ResponseEntity.badRequest().body("newMemberId cannot be null or an empty string when adding a new member to a room.");
 		}
 
 		logger.info("Received request to add a new member with ID: " + newMemberId + " to a room with ID: " + roomId);
-		this.roomService.addMember(roomId, newMemberId);
+		boolean result = this.roomService.addMember(roomId, newMemberId);
+
+		if(result)
+			return ResponseEntity.ok("Successfully added new member: " + newMemberId + " to room with ID: " + roomId);
+		else
+			return ResponseEntity.badRequest().body("Unable to add member: " + newMemberId + " to room with ID: " + roomId);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/removeMember", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void removeMember(@RequestParam String roomId, @RequestParam String memberId)
+	ResponseEntity<String> removeMember(@RequestParam String roomId, @RequestParam String memberId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when removing a member from a room.");
-			return;
+			return ResponseEntity.badRequest().body("roomId cannot be null or an empty string when removing a member from a room.");
 		}
 
 		if(memberId == null || memberId.isEmpty())
 		{
 			logger.error("memberId cannot be null or an empty string when removing a member from a room.");
-			return;
+			return ResponseEntity.badRequest().body("memberId cannot be null or an empty string when removing a member from a room.");
 		}
 
 		logger.info("Received request to remove a member with ID: " + memberId + " from a room with ID: " + roomId);
-		this.roomService.removeMember(roomId, memberId);
+		boolean result = this.roomService.removeMember(roomId, memberId);
+
+		if(result)
+			return ResponseEntity.ok("Successfully removed member with ID: " + memberId + " from room with ID: " + roomId);
+		else
+			return ResponseEntity.badRequest().body("Unable to remove member with ID: " + memberId + " from room with ID: " + roomId);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/addAdmin", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE )
-	void addAdmin(@RequestParam String roomId, @RequestParam String newAdminId)
+	ResponseEntity<String> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding admin to a room.");
-			return;
+			return ResponseEntity.badRequest().body("roomId cannot be null or an empty string when adding admin to a room.");
 		}
 
 		if(newAdminId == null || newAdminId.isEmpty())
 		{
 			logger.error("newAdminId cannot be null or an empty string when adding admin to a room.");
-			return;
+			return ResponseEntity.badRequest().body("newAdminId cannot be null or an empty string when adding admin to a room.");
 		}
 
 		logger.info("Received request to add a new admin with ID: " + newAdminId + " to a room with ID: " + roomId);
-		this.roomService.addAdmin(roomId, newAdminId);
+		boolean result = this.roomService.addAdmin(roomId, newAdminId);
+
+		if(result)
+			return ResponseEntity.ok("Successfully added admin with ID: " + newAdminId + " to room with ID: " + roomId);
+		else
+			return ResponseEntity.badRequest().body("Unable to add admin with ID: " + newAdminId + " to room with ID: " + roomId);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/removeAdmin", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void removeAdmin(@RequestParam String roomId, @RequestParam String adminId)
+	ResponseEntity<String> removeAdmin(@RequestParam String roomId, @RequestParam String adminId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when removing an admin from a room.");
-			return;
+			return ResponseEntity.badRequest().body("roomId cannot be null or an empty string when removing an admin from a room.");
 		}
 
 		if(adminId == null || adminId.isEmpty())
 		{
 			logger.error("adminId cannot be null or an empty string when removing an admin from a room.");
-			return;
+			return ResponseEntity.badRequest().body("adminId cannot be null or an empty string when removing an admin from a room.");
 		}
 
 		logger.info("Received request to remove an admin with ID: " + adminId + " from a room with ID: " + roomId);
-		this.roomService.removeAdmin(roomId, adminId);
+		boolean result = this.roomService.removeAdmin(roomId, adminId);
+
+		if(result)
+			return ResponseEntity.ok("Successfully removed admin with ID: " + adminId + " from room with ID: " + roomId);
+		else
+			return ResponseEntity.badRequest().body("Unable to remove admin with ID: " + adminId + " from room with ID: " + roomId);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/roomsWithMembership", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	List<UUID> getRoomsWithMembership(String userId)
+	ResponseEntity<List<UUID>> getRoomsWithMembership(String userId)
 	{
 		if(userId == null || userId.isEmpty())
 		{
 			logger.error("userId cannot be null or an empty string when requesting a list of rooms with membership.");
-			return new ArrayList<>();
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to get list of rooms for which user: " + userId + " has membership.");
-		return roomService.getRoomsWithMembership(userId);
+		Optional<List<UUID>> result = roomService.getRoomsWithMembership(userId);
+
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
+		else
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/readTimestamps", method={GET}, consumes= MediaType.APPLICATION_JSON_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	Map<UUID, LocalDateTime> getReadTimestamps(@RequestParam String userId)
+	ResponseEntity<Map<UUID, LocalDateTime>> getReadTimestamps(@RequestParam String userId)
 	{
 		if(userId == null || userId.isEmpty())
 		{
 			logger.error("userId cannot be null or an empty string when requesting a map of rooms and their read timestamps.");
-			return new HashMap<>();
+			return ResponseEntity.badRequest().body(new HashMap<>());
 		}
 
 		logger.info("Received request to get map of rooms and their read timestamps for user: " + userId);
-		return this.roomService.getReadTimestamps(userId);
+		Optional<Map<UUID, LocalDateTime>> result = this.roomService.getReadTimestamps(userId);
+
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
+		else
+			return ResponseEntity.badRequest().body(new HashMap<>());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/users", method={GET})
-	List<User> getAllUsers()
+	ResponseEntity<List<User>> getAllUsers()
 	{
 		logger.info("Received request to get list of all users.");
-		return this.roomService.getAllUsers();
+		return ResponseEntity.ok(this.roomService.getAllUsers());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/addUser", method={POST})
-	void addUser(@RequestParam String fullName)
+	ResponseEntity<String> addUser(@RequestParam String fullName)
 	{
 		if(fullName == null || fullName.isEmpty())
 		{
 			logger.error("fullName cannot be null or an empty string when adding a new user.");
-			return;
+			return ResponseEntity.badRequest().body("fullName cannot be null or an empty string when adding a new user.");
 		}
 
 		logger.info("Received request to add user with full name: " + fullName);
-		this.roomService.addUser(fullName);
+		boolean result = this.roomService.addUser(fullName);
+
+		if(result)
+			return ResponseEntity.ok("Successfully added user with full name: " + fullName);
+		else
+			return ResponseEntity.badRequest().body("Unable to added user with full name: " + fullName);
 	}
 }
