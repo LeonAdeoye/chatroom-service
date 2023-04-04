@@ -74,7 +74,7 @@ public class RoomController
 		result = this.roomService.deactivateRoom(roomId);
 
 		if(result)
-			return ResponseEntity.status(HttpStatus.OK).body("Deactivated room with ID: " +  roomId);
+			return ResponseEntity.ok("Deactivated room with ID: " +  roomId);
 		else
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not find room with ID: " + roomId);
 	}
@@ -86,82 +86,93 @@ public class RoomController
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the conversation for a room with Id: " + roomId + " and start offset: " + startOffset + " end offset: " + endOffset);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Conversation());
+			return ResponseEntity.badRequest().body(new Conversation());
 		}
 
 		if(startOffset > endOffset)
 		{
 			logger.error("Start offset: " + startOffset + " cannot be greater than the end offset: " + endOffset + " for room with Id: " + roomId);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Conversation());
+			return ResponseEntity.badRequest().body(new Conversation());
 		}
 
 		logger.info("Received request to get the conversation of a room with ID: " + roomId + " with start offset: " + startOffset + " and end offset: " + endOffset);
 		Optional<Conversation> result = this.roomService.getConversation(roomId, startOffset, endOffset);
 
 		if(result.isPresent())
-			return ResponseEntity.status(HttpStatus.OK).body(this.roomService.getConversation(roomId, startOffset, endOffset).get());
+			return ResponseEntity.ok(this.roomService.getConversation(roomId, startOffset, endOffset).get());
 		else
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Conversation());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/addChat", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	void AddChat(@RequestBody ChatMessage chatMessage)
+	ResponseEntity<String> AddChat(@RequestBody ChatMessage chatMessage)
 	{
 		if(chatMessage == null)
 		{
-			logger.error("chat message request body cannot be null when adding a new chat message.");
-			return;
+			logger.error("Chat message request body cannot be null when adding a new chat message.");
+			return ResponseEntity.badRequest().body("Chat message request body cannot be null when adding a new chat message.");
 		}
 
 		if(chatMessage.getAuthorId() == null)
 		{
-			logger.error("Invalid author ID used to add chat.");
-			return;
+			logger.error("Invalid author ID cannot be used to add new chat message.");
+			return ResponseEntity.badRequest().body("Invalid author ID cannot be used to add a new chat message.");
 		}
 
 		if(chatMessage.getContent() == null || chatMessage.getContent().isEmpty())
 		{
-			logger.error("Invalid chat message cannot be added to the room's conversation.");
-			return;
+			logger.error("Invalid chat message content cannot be added to add new chat message.");
+			return ResponseEntity.badRequest().body("Invalid chat message content cannot be used to add new chat message.");
 		}
 
 		if(chatMessage.getRoomId() == null)
 		{
-			logger.error("Invalid room cannot be used to create chat message.");
-			return;
+			logger.error("Invalid room ID cannot be used to add a new chat message.");
+			return ResponseEntity.badRequest().body("Invalid room ID cannot be used to add a new chat message.");
 		}
 
 		logger.info("Received request to add chat message: " + chatMessage);
 		this.roomService.addChat(chatMessage);
+		return ResponseEntity.ok("New chat message created and added to conversation");
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/members", method={GET})
-	List<UUID> getMembers(@RequestParam String roomId)
+	ResponseEntity<List<UUID>> getMembers(@RequestParam String roomId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when requesting the list of members of a room.");
-			return new ArrayList<>();
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to get the list of members of a room with ID: " + roomId);
-		return this.roomService.getMembers(roomId);
+		Optional<List<UUID>> result = this.roomService.getMembers(roomId);
+
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/admins", method={GET})
-	List<UUID> getAdministrators(@RequestParam String roomId)
+	ResponseEntity<List<UUID>>  getAdministrators(@RequestParam String roomId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the list of administrators.");
-			return new ArrayList<>();
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to get the list of administrators for a room with ID: " + roomId);
-		return this.roomService.getAdministrators(roomId);
+		Optional<List<UUID>> result = this.roomService.getAdministrators(roomId);
+
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
 	}
 
 	@CrossOrigin

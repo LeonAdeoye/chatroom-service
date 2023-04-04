@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.of;
+
 @Service
 public class RoomServiceImpl implements RoomService
 {
@@ -141,29 +143,43 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public List<UUID> getAdministrators(String roomId)
+	public Optional<List<UUID>> getAdministrators(String roomId)
 	{
-		UUID roomUUID = UUID.fromString(roomId);
+		try
+		{
+			UUID roomUUID = UUID.fromString(roomId);
 
-		if(roomsMap.containsKey(roomUUID))
-			return roomsMap.get(roomUUID).getAdministrators();
-		else
-			logger.error("Room with room Id: " + roomId + " does not exists.");
+			if (roomsMap.containsKey(roomUUID))
+				return Optional.of(roomsMap.get(roomUUID).getAdministrators());
+			else
+				logger.error("Room with room Id: " + roomId + " does not exists.");
+		}
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+		}
 
-		return new ArrayList<>();
+		return Optional.empty();
 	}
 
 	@Override
-	public List<UUID> getMembers(String roomId)
+	public Optional<List<UUID>> getMembers(String roomId)
 	{
-		UUID roomUUID = UUID.fromString(roomId);
+		try
+		{
+			UUID roomUUID = UUID.fromString(roomId);
 
-		if(roomsMap.containsKey(roomUUID))
-			return roomsMap.get(roomUUID).getMembers();
-		else
-			logger.error("Room with room Id: " + roomId + " does not exists.");
+			if(roomsMap.containsKey(roomUUID))
+				return Optional.of(roomsMap.get(roomUUID).getMembers());
+			else
+				logger.error("Room with room Id: " + roomId + " does not exists.");
+		}
+		catch (IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+		}
 
-		return new ArrayList<>();
+		return Optional.empty();
 	}
 
 	@Override
@@ -218,7 +234,7 @@ public class RoomServiceImpl implements RoomService
 			{
 				// TODO filter between the two offsets.
 				Room existingRoom = roomsMap.get(roomUUID);
-				return Optional.of(existingRoom.getConversation());
+				return of(existingRoom.getConversation());
 			}
 			else
 				logger.error("Room with room Id: " + roomUUID + " does not exists.");

@@ -21,9 +21,9 @@ public interface RoomService
 
 	void removeMember(String roomId, String memberId);
 
-	List<UUID> getAdministrators(String roomId);
+	Optional<List<UUID>> getAdministrators(String roomId);
 
-	List<UUID> getMembers(String roomId);
+	Optional<List<UUID>> getMembers(String roomId);
 
 	void addChat(ChatMessage chatMessage);
 
