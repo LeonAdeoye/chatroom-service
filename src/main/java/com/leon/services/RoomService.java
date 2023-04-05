@@ -13,13 +13,13 @@ public interface RoomService
 
 	int getMemberCount(String roomId);
 
-	boolean removeAdmin(String roomId, String adminId);
+	boolean removeAdmin(String roomId, String adminId, String instigatorId);
 
-	boolean addAdmin(String roomId, String newAdminId);
+	boolean addAdmin(String roomId, String newAdminId, String instigatorId);
 
-	boolean addMember(String roomId, String newMemberId);
+	boolean addMember(String roomId, String newMemberId, String instigatorId);
 
-	boolean removeMember(String roomId, String memberId);
+	boolean removeMember(String roomId, String memberId, String instigatorId);
 
 	Optional<List<UUID>> getAdministrators(String roomId);
 
@@ -27,7 +27,7 @@ public interface RoomService
 
 	boolean addChat(ChatMessage chatMessage);
 
-	boolean deactivateRoom(String roomId);
+	boolean deactivateRoom(String roomId, String instigatorId);
 
 	Optional<Conversation> getConversation(String roomId, int startOffset, int endOffset);
 
@@ -44,4 +44,6 @@ public interface RoomService
 	List<UUID> getAllRooms();
 
 	void reload();
+
+	boolean isValidAdministrator(String roomId, String userId);
 }

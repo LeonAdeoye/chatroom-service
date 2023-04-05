@@ -77,14 +77,16 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/deactivateRoom", method={PUT})
-	ResponseEntity<String> deactivateRoom(@RequestParam String roomId)
+	ResponseEntity<String> deactivateRoom(@RequestParam String roomId, @RequestParam String instigatorId)
 	{
-		boolean result;
 		if(roomId == null || roomId.isEmpty())
 			logger.error("roomId cannot be null or an empty string when deactivating a room.");
 
+		if(instigatorId == null || instigatorId.isEmpty())
+			logger.error("instigatorId cannot be null or an empty string when deactivating a room.");
+
 		logger.info("Received request to deactivate room with ID: " + roomId);
-		result = this.roomService.deactivateRoom(roomId);
+		boolean result = this.roomService.deactivateRoom(roomId, instigatorId);
 
 		if(result)
 			return ResponseEntity.ok("Deactivated room with ID: " +  roomId);
@@ -216,7 +218,7 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addMember", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<String> addMember(@RequestParam String roomId, @RequestParam String newMemberId)
+	ResponseEntity<String> addMember(@RequestParam String roomId, @RequestParam String newMemberId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
@@ -230,18 +232,31 @@ public class RoomController
 			return ResponseEntity.badRequest().body("newMemberId cannot be null or an empty string when adding a new member to a room.");
 		}
 
-		logger.info("Received request to add a new member with ID: " + newMemberId + " to a room with ID: " + roomId);
-		boolean result = this.roomService.addMember(roomId, newMemberId);
+		if(instigatorId == null || instigatorId.isEmpty())
+		{
+			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
+			return ResponseEntity.badRequest().body("instigatorId cannot be null or an empty string when adding a new member to a room.");
+		}
+
+		logger.info("Received request to add a new member with ID: " + newMemberId + " to a room with ID: " + roomId + " by user with ID: " + instigatorId);
+
+		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
+		{
+			logger.error("The instigator is not a valid administrator of room Id: " + roomId);
+			return ResponseEntity.badRequest().body("The instigator is not a valid administrator of room Id: " + roomId);
+		}
+
+		boolean result = this.roomService.addMember(roomId, newMemberId, instigatorId);
 
 		if(result)
-			return ResponseEntity.ok("Successfully added new member: " + newMemberId + " to room with ID: " + roomId);
+			return ResponseEntity.ok("Successfully added new member: " + newMemberId + " to room with Id: " + roomId);
 		else
-			return ResponseEntity.badRequest().body("Unable to add member: " + newMemberId + " to room with ID: " + roomId);
+			return ResponseEntity.badRequest().body("Unable to add member: " + newMemberId + " to room with Id: " + roomId);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/removeMember", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<String> removeMember(@RequestParam String roomId, @RequestParam String memberId)
+	ResponseEntity<String> removeMember(@RequestParam String roomId, @RequestParam String memberId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
@@ -255,8 +270,21 @@ public class RoomController
 			return ResponseEntity.badRequest().body("memberId cannot be null or an empty string when removing a member from a room.");
 		}
 
+		if(instigatorId == null || instigatorId.isEmpty())
+		{
+			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
+			return ResponseEntity.badRequest().body("instigatorId cannot be null or an empty string when adding a new member to a room.");
+		}
+
 		logger.info("Received request to remove a member with ID: " + memberId + " from a room with ID: " + roomId);
-		boolean result = this.roomService.removeMember(roomId, memberId);
+
+		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
+		{
+			logger.error("The instigator is not a valid administrator of room with ID: " + roomId);
+			return ResponseEntity.badRequest().body("The instigator is not a valid administrator of room with ID: " + roomId);
+		}
+
+		boolean result = this.roomService.removeMember(roomId, memberId, instigatorId);
 
 		if(result)
 			return ResponseEntity.ok("Successfully removed member with ID: " + memberId + " from room with ID: " + roomId);
@@ -266,7 +294,7 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addAdmin", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE )
-	ResponseEntity<String> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId)
+	ResponseEntity<String> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
@@ -280,8 +308,21 @@ public class RoomController
 			return ResponseEntity.badRequest().body("newAdminId cannot be null or an empty string when adding admin to a room.");
 		}
 
+		if(instigatorId == null || instigatorId.isEmpty())
+		{
+			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
+			return ResponseEntity.badRequest().body("instigatorId cannot be null or an empty string when adding a new member to a room.");
+		}
+
 		logger.info("Received request to add a new admin with ID: " + newAdminId + " to a room with ID: " + roomId);
-		boolean result = this.roomService.addAdmin(roomId, newAdminId);
+
+		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
+		{
+			logger.error("The instigator is not a valid administrator of room with ID: " + roomId);
+			return ResponseEntity.badRequest().body("The instigator is not a valid administrator of room with ID: " + roomId);
+		}
+
+		boolean result = this.roomService.addAdmin(roomId, newAdminId, instigatorId);
 
 		if(result)
 			return ResponseEntity.ok("Successfully added admin with ID: " + newAdminId + " to room with ID: " + roomId);
@@ -291,7 +332,7 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/removeAdmin", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<String> removeAdmin(@RequestParam String roomId, @RequestParam String adminId)
+	ResponseEntity<String> removeAdmin(@RequestParam String roomId, @RequestParam String adminId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
@@ -305,8 +346,21 @@ public class RoomController
 			return ResponseEntity.badRequest().body("adminId cannot be null or an empty string when removing an admin from a room.");
 		}
 
+		if(instigatorId == null || instigatorId.isEmpty())
+		{
+			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
+			return ResponseEntity.badRequest().body("instigatorId cannot be null or an empty string when adding a new member to a room.");
+		}
+
 		logger.info("Received request to remove an admin with ID: " + adminId + " from a room with ID: " + roomId);
-		boolean result = this.roomService.removeAdmin(roomId, adminId);
+
+		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
+		{
+			logger.error("The instigator is not a valid administrator of room with ID: " + roomId);
+			return ResponseEntity.badRequest().body("The instigator is not a valid administrator of room with ID: " + roomId);
+		}
+
+		boolean result = this.roomService.removeAdmin(roomId, adminId, instigatorId);
 
 		if(result)
 			return ResponseEntity.ok("Successfully removed admin with ID: " + adminId + " from room with ID: " + roomId);

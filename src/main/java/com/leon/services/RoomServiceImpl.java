@@ -96,7 +96,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean removeAdmin(String roomId, String adminId)
+	public boolean removeAdmin(String roomId, String adminId, String instigatorId)
 	{
 		try
 		{
@@ -128,7 +128,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean addAdmin(String roomId, String newAdminId)
+	public boolean addAdmin(String roomId, String newAdminId, String instigatorId)
 	{
 		try
 		{
@@ -160,7 +160,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean addMember(String roomId, String newMemberId)
+	public boolean addMember(String roomId, String newMemberId, String instigatorId)
 	{
 		try
 		{
@@ -176,7 +176,7 @@ public class RoomServiceImpl implements RoomService
 			Room existingRoom = roomsMap.get(roomUUID);
 			if (existingRoom.getMembers().stream().filter(newMemberUUID::equals).count() != 0)
 			{
-				logger.error("Room with Id: " + roomId + " does not have a member with Id: " + newMemberId);
+				logger.error("Room with Id: " + roomId + " already has a member with this Id: " + newMemberId);
 				return false;
 			}
 
@@ -192,7 +192,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean removeMember(String roomId, String memberId)
+	public boolean removeMember(String roomId, String memberId, String instigator)
 	{
 		try
 		{
@@ -293,7 +293,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean deactivateRoom(String roomId)
+	public boolean deactivateRoom(String roomId, String instigatorId)
 	{
 		try
 		{
@@ -416,5 +416,27 @@ public class RoomServiceImpl implements RoomService
 		this.users.add(newUser);
 		userRepository.save(newUser);
 		return true;
+	}
+
+	@Override
+	public boolean isValidAdministrator(String roomId, String userId)
+	{
+		try
+		{
+			UUID roomUUID = UUID.fromString(roomId);
+			UUID userUUID = UUID.fromString(userId);
+			if(roomsMap.containsKey(roomUUID))
+			{
+				if(roomsMap.get(roomUUID).getAdministrators().stream().filter(userUUID::equals).count() != 0)
+					return true;
+			}
+			else
+				logger.error("Room with room Id: " + roomUUID + " does not exists.");
+		}
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+		}
+		return false;
 	}
 }

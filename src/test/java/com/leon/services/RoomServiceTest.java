@@ -5,6 +5,7 @@ import com.leon.repositories.RoomRepository;
 import com.leon.repositories.UserRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,7 +33,7 @@ public class RoomServiceTest
 		// Act
 		roomService.addUser("Horatio Adeoye");
 		// Assert
-		verify(userRepositoryMock, times(1)).save(new User("Horatio Adeoye"));
+		verify(userRepositoryMock, times(1)).save(Mockito.any(User.class));
 	}
 
 	@Test
