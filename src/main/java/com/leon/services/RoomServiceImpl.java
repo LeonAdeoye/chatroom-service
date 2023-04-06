@@ -36,43 +36,45 @@ public class RoomServiceImpl implements RoomService
 	private void loadFromStore()
 	{
 		List<Room> loadedRooms = roomRepository.findAll();
-		logger.info("Loaded " + loadedRooms.size() + " rooms from store");
+		logger.info("Loaded " + loadedRooms.size() + " room(s) from store.");
 
 		if(loadedRooms.size() > 0)
-		{
 			roomsMap = loadedRooms.stream().collect(Collectors.toMap(Room::getId, Function.identity()));
-			logger.info("Created map from list:" + roomsMap.size() + " rooms from store");
-		}
 		else
-		{
 			roomsMap = new HashMap<>();
-			logger.info("Created empty map as repository list is empty.");
-		}
 
 		users = userRepository.findAll();
-		logger.info("Loaded " + users.size() + " users from store");
+		logger.info("Loaded " + users.size() + " user(s) from store.");
 	}
 
 	@Override
-	public boolean addRoom(Room room)
+	public Optional<Room> addRoom(Room room)
 	{
 		if(roomsMap.containsKey(room.getId()))
 		{
 			logger.error("Room with room Id: " + room.getId() + " already exists.");
-			return false;
+			return Optional.empty();
 		}
 
 		if(users.stream().filter(user -> user.getId().equals(room.getOwnerId())).count() == 0)
 		{
 			logger.error("Room owner with user Id: " + room.getOwnerId() + " does not exists.");
-			return false;
+			return Optional.empty();
 		}
 
-		Room newRoom = new Room(room.getRoomName(), room.getOwnerId());
-		newRoom.addAdministrator(room.getOwnerId());
-		roomsMap.put(newRoom.getId(), newRoom);
-		roomRepository.save(newRoom);
-		return true;
+		try
+		{
+			Room newRoom = new Room(room.getRoomName(), room.getOwnerId());
+			newRoom.addAdministrator(room.getOwnerId());
+			roomsMap.put(newRoom.getId(), newRoom);
+			roomRepository.save(newRoom);
+			return Optional.of(newRoom);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
+		return Optional.empty();
 	}
 
 	@Override
@@ -315,7 +317,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public Optional<Conversation> getConversation(String roomId, int startOffset, int endOffset)
+	public Optional<List<ChatMessage>> getConversation(String roomId, int startOffset, int endOffset)
 	{
 		try
 		{
@@ -396,9 +398,10 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public List<UUID> getAllRooms()
+	public Map<UUID, String> getAllRooms()
 	{
-		return roomsMap.keySet().stream().collect(Collectors.toList());
+		return this.roomsMap.entrySet().stream()
+				.collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().getRoomName()));
 	}
 
 	@Override
@@ -410,12 +413,20 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean addUser(String fullName)
+	public Optional<User> addUser(String fullName)
 	{
-		User newUser = new User(fullName);
-		this.users.add(newUser);
-		userRepository.save(newUser);
-		return true;
+		try
+		{
+			User newUser = new User(fullName);
+			this.users.add(newUser);
+			userRepository.save(newUser);
+			return Optional.of(newUser);
+		}
+		catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
+		return Optional.empty();
 	}
 
 	@Override

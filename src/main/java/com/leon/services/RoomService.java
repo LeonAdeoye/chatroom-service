@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface RoomService
 {
-	boolean addRoom(Room room);
+	Optional<Room> addRoom(Room room);
 
 	int getMemberCount(String roomId);
 
@@ -29,7 +29,7 @@ public interface RoomService
 
 	boolean deactivateRoom(String roomId, String instigatorId);
 
-	Optional<Conversation> getConversation(String roomId, int startOffset, int endOffset);
+	Optional<List<ChatMessage>> getConversation(String roomId, int startOffset, int endOffset);
 
 	Optional<List<UUID>> getRoomsWithMembership(String userId);
 
@@ -39,9 +39,9 @@ public interface RoomService
 
 	List<User> getAllUsers();
 
-	boolean addUser(String fullName);
+	Optional<User> addUser(String fullName);
 
-	List<UUID> getAllRooms();
+	Map<UUID, String> getAllRooms();
 
 	void reload();
 

@@ -12,16 +12,16 @@ public class Room
 	private List<UUID> members;
 	private boolean isPrivate;
 	private boolean isValid;
-	private Conversation conversation;
+	private List<ChatMessage> conversation;
 	private List<UUID> administrators;
 	private List<Activity> activities;
 
-	public Conversation getConversation()
+	public List<ChatMessage> getConversation()
 	{
 		return conversation;
 	}
 
-	public void setConversation(Conversation conversation)
+	public void setConversation(List<ChatMessage> conversation)
 	{
 		this.conversation = conversation;
 	}
@@ -124,7 +124,7 @@ public class Room
 		this.members = new ArrayList<>();
 		this.isPrivate = false;
 		this.isValid = false;
-		this.conversation = new Conversation();
+		this.conversation = new ArrayList<>();
 		this.administrators = new ArrayList<>();
 		this.activities = new ArrayList<>();
 	}
@@ -137,7 +137,7 @@ public class Room
 		this.members = new ArrayList<>();
 		this.isPrivate = isPrivate;
 		this.isValid = isValid;
-		this.conversation = new Conversation();
+		this.conversation = new ArrayList<>();
 		this.administrators = new ArrayList<>();
 		this.activities = new ArrayList<>();
 	}
@@ -150,7 +150,7 @@ public class Room
 		this.members = new ArrayList<>();
 		this.isPrivate = false;
 		this.isValid = true;
-		this.conversation = new Conversation();
+		this.conversation = new ArrayList<>();
 		this.administrators = new ArrayList<>();
 		this.activities = new ArrayList<>();
 	}
@@ -163,6 +163,6 @@ public class Room
 
 	public void addChatMessage(ChatMessage chatMessage)
 	{
-		this.conversation.addChatMessage(chatMessage);
+		this.conversation.add(chatMessage);
 	}
 }

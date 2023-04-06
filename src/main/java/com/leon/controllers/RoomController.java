@@ -1,5 +1,8 @@
 package com.leon.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leon.models.*;
 import com.leon.services.RoomService;
 import org.slf4j.Logger;
@@ -11,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
+
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
@@ -38,41 +42,68 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addRoom", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<String> addRoom(@RequestBody Room room)
+	ResponseEntity<Room> addRoom(@RequestBody Room room)
 	{
 		if(room == null)
 		{
 			logger.error("room cannot be null when adding a room.");
-			return ResponseEntity.badRequest().body("room cannot be null when adding a room.");
+			return ResponseEntity.badRequest().body(new Room());
 		}
 
 		if(room.getRoomName() == null || room.getRoomName().isEmpty())
 		{
 			logger.error("roomName cannot be null or an empty string when adding a room.");
-			return ResponseEntity.badRequest().body("roomName cannot be null or an empty string when adding a room.");
+			return ResponseEntity.badRequest().body(new Room());
 		}
 
 		if(room.getOwnerId() == null)
 		{
 			logger.error("room owner cannot be null and must be a valid UUID");
-			return ResponseEntity.badRequest().body("room owner cannot be null and must be a valid UUID");
+			return ResponseEntity.badRequest().body(new Room());
 		}
 
 		logger.info("Received request to add room: " + room);
-		boolean result = this.roomService.addRoom(room);
+		Optional<Room> result = this.roomService.addRoom(room);
 
-		if(result)
-			return ResponseEntity.ok("Successfully added room with name: " + room.getRoomName() + " that is owned by" + room.getOwnerId());
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
 		else
-			return ResponseEntity.badRequest().body("Unable to add room with name: " + room.getRoomName() + " that is owned by: " + room.getOwnerId());
+			return ResponseEntity.badRequest().body(new Room());
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/room", method={GET})
+	ResponseEntity<Room> getRoom(@RequestParam String roomId)
+	{
+		logger.info("Received request to get room with ID: " + roomId);
+		Optional<Room> result = this.roomService.getRoom(roomId);
+
+ 		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
+	 	else
+			return ResponseEntity.ok(new Room());
 	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/rooms", method={GET})
-	ResponseEntity<List<UUID>> getAllRooms()
+	ResponseEntity<List<JsonNode>> getAllRooms()
 	{
 		logger.info("Received request to get list of all rooms.");
-		return ResponseEntity.ok(this.roomService.getAllRooms());
+		ObjectMapper objectMapper = new ObjectMapper();
+		List<JsonNode> result = new ArrayList<>();
+		for (Map.Entry<UUID, String> entry : this.roomService.getAllRooms().entrySet())
+		{
+			try
+			{
+				result.add(objectMapper.readTree("{\"id\": \"" + entry.getKey() + "\", \"name\": \"" + entry.getValue() + "\"}"));
+			}
+			catch (JsonProcessingException jpe)
+			{
+				logger.error(jpe.getMessage());
+			}
+		}
+
+		return ResponseEntity.ok(result);
 	}
 
 	@CrossOrigin
@@ -96,27 +127,27 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/conversation", method={GET}, produces=MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<Conversation> getConversation(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
+	ResponseEntity<List<ChatMessage>> getConversation(@RequestParam String roomId, @RequestParam int startOffset, @RequestParam int endOffset)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when getting the conversation for a room with Id: " + roomId + " and start offset: " + startOffset + " end offset: " + endOffset);
-			return ResponseEntity.badRequest().body(new Conversation());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(startOffset > endOffset)
 		{
 			logger.error("Start offset: " + startOffset + " cannot be greater than the end offset: " + endOffset + " for room with Id: " + roomId);
-			return ResponseEntity.badRequest().body(new Conversation());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to get the conversation of a room with ID: " + roomId + " with start offset: " + startOffset + " and end offset: " + endOffset);
-		Optional<Conversation> result = this.roomService.getConversation(roomId, startOffset, endOffset);
+		Optional<List<ChatMessage>> result = this.roomService.getConversation(roomId, startOffset, endOffset);
 
 		if(result.isPresent())
 			return ResponseEntity.ok(this.roomService.getConversation(roomId, startOffset, endOffset).get());
 		else
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Conversation());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ArrayList<>());
 	}
 
 	@CrossOrigin
@@ -217,7 +248,7 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/addMember", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/addMember", method={POST})
 	ResponseEntity<String> addMember(@RequestParam String roomId, @RequestParam String newMemberId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
@@ -255,7 +286,7 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/removeMember", method={DELETE}, consumes= MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/removeMember", method={DELETE})
 	ResponseEntity<String> removeMember(@RequestParam String roomId, @RequestParam String memberId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
@@ -293,7 +324,7 @@ public class RoomController
 	}
 
 	@CrossOrigin
-	@RequestMapping(value = "/addAdmin", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE )
+	@RequestMapping(value = "/addAdmin", method={POST})
 	ResponseEntity<String> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
@@ -417,20 +448,20 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addUser", method={POST})
-	ResponseEntity<String> addUser(@RequestParam String fullName)
+	ResponseEntity<User> addUser(@RequestParam String fullName)
 	{
 		if(fullName == null || fullName.isEmpty())
 		{
 			logger.error("fullName cannot be null or an empty string when adding a new user.");
-			return ResponseEntity.badRequest().body("fullName cannot be null or an empty string when adding a new user.");
+			return ResponseEntity.badRequest().body(new User());
 		}
 
 		logger.info("Received request to add user with full name: " + fullName);
-		boolean result = this.roomService.addUser(fullName);
+		Optional<User> newUser = this.roomService.addUser(fullName);
 
-		if(result)
-			return ResponseEntity.ok("Successfully added user with full name: " + fullName);
+		if(newUser.isPresent())
+			return ResponseEntity.ok(newUser.get());
 		else
-			return ResponseEntity.badRequest().body("Unable to added user with full name: " + fullName);
+			return ResponseEntity.badRequest().body(new User());
 	}
 }
