@@ -132,7 +132,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean addAdmin(String roomId, String newAdminId, String instigatorId)
+	public Optional<Room> addAdmin(String roomId, String newAdminId, String instigatorId)
 	{
 		try
 		{
@@ -143,30 +143,30 @@ public class RoomServiceImpl implements RoomService
 			if (!roomsMap.containsKey(roomUUID))
 			{
 				logger.error("Room with room Id: " + roomId + " does not exists.");
-				return false;
+				return Optional.empty();
 			}
 
 			Room existingRoom = roomsMap.get(roomUUID);
 			if (existingRoom.getAdministrators().stream().filter(newAdminId::equals).count() != 0)
 			{
 				logger.error("Administrator with id: " + newAdminId + " already exists in room with Id: " + roomId);
-				return false;
+				return Optional.empty();
 			}
 
 			existingRoom.addAdministrator(newAdminUUID);
 			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID, instigatorUUID));
 			roomRepository.save(existingRoom);
-			return true;
+			return Optional.of(existingRoom);
 		}
 		catch(IllegalArgumentException iae)
 		{
 			logger.error(iae.getMessage());
-			return false;
+			return Optional.empty();
 		}
 	}
 
 	@Override
-	public boolean addMember(String roomId, String newMemberId, String instigatorId)
+	public Optional<Room> addMember(String roomId, String newMemberId, String instigatorId)
 	{
 		try
 		{
@@ -177,25 +177,25 @@ public class RoomServiceImpl implements RoomService
 			if (!roomsMap.containsKey(roomUUID))
 			{
 				logger.error("Room with room Id: " + roomId + " does not exists.");
-				return false;
+				return Optional.empty();
 			}
 
 			Room existingRoom = roomsMap.get(roomUUID);
 			if (existingRoom.getMembers().stream().filter(newMemberUUID::equals).count() != 0)
 			{
 				logger.error("Room with Id: " + roomId + " already has a member with this Id: " + newMemberId);
-				return false;
+				return Optional.empty();
 			}
 
 			existingRoom.addMember(newMemberUUID);
 			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_MEMBER, newMemberUUID, instigatorUUID));
 			roomRepository.save(existingRoom);
-			return true;
+			return Optional.of(existingRoom);
 		}
 		catch(IllegalArgumentException iae)
 		{
 			logger.error(iae.getMessage());
-			return false;
+			return Optional.empty();
 		}
 	}
 
