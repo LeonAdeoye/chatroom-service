@@ -152,39 +152,39 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addChat", method={POST}, consumes= MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<String> AddChat(@RequestBody ChatMessage chatMessage)
+	ResponseEntity<List<ChatMessage>> addChat(@RequestBody ChatMessage chatMessage)
 	{
 		if(chatMessage == null)
 		{
 			logger.error("Chat message request body cannot be null when adding a new chat message.");
-			return ResponseEntity.badRequest().body("Chat message request body cannot be null when adding a new chat message.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(chatMessage.getAuthorId() == null)
 		{
 			logger.error("Invalid author ID cannot be used to add new chat message.");
-			return ResponseEntity.badRequest().body("Invalid author ID cannot be used to add a new chat message.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(chatMessage.getContent() == null || chatMessage.getContent().isEmpty())
 		{
 			logger.error("Invalid chat message content cannot be added to add new chat message.");
-			return ResponseEntity.badRequest().body("Invalid chat message content cannot be used to add new chat message.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(chatMessage.getRoomId() == null)
 		{
 			logger.error("Invalid room ID cannot be used to add a new chat message.");
-			return ResponseEntity.badRequest().body("Invalid room ID cannot be used to add a new chat message.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to add chat message: " + chatMessage);
-		boolean result = this.roomService.addChat(chatMessage);
+		Optional<List<ChatMessage>> result = this.roomService.addChat(chatMessage);
 
-		if(result)
-			return ResponseEntity.ok("Successfully created new chat message and added to conversation in room with ID: " + chatMessage.getRoomId());
+		if(result.isPresent())
+			return ResponseEntity.ok(result.get());
 		else
-			return ResponseEntity.badRequest().body("Unable to add chat message to the conversation in room with ID: " + chatMessage.getRoomId());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 	}
 
 	@CrossOrigin

@@ -104,6 +104,7 @@ public class RoomServiceImpl implements RoomService
 		{
 			UUID roomUUID = UUID.fromString(roomId);
 			UUID adminUUID = UUID.fromString(adminId);
+			UUID instigatorUUID = UUID.fromString(instigatorId);
 
 			if (!roomsMap.containsKey(roomUUID))
 			{
@@ -119,7 +120,8 @@ public class RoomServiceImpl implements RoomService
 			}
 
 			existingRoom.getAdministrators().removeIf(adminUUID::equals);
-			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_ADMIN, adminUUID));
+			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_ADMIN, adminUUID, instigatorUUID));
+			roomRepository.save(existingRoom);
 			return true;
 		}
 		catch(IllegalArgumentException iae)
@@ -136,6 +138,7 @@ public class RoomServiceImpl implements RoomService
 		{
 			UUID roomUUID = UUID.fromString(roomId);
 			UUID newAdminUUID = UUID.fromString(newAdminId);
+			UUID instigatorUUID = UUID.fromString(instigatorId);
 
 			if (!roomsMap.containsKey(roomUUID))
 			{
@@ -151,7 +154,8 @@ public class RoomServiceImpl implements RoomService
 			}
 
 			existingRoom.addAdministrator(newAdminUUID);
-			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID));
+			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID, instigatorUUID));
+			roomRepository.save(existingRoom);
 			return true;
 		}
 		catch(IllegalArgumentException iae)
@@ -168,8 +172,9 @@ public class RoomServiceImpl implements RoomService
 		{
 			UUID roomUUID = UUID.fromString(roomId);
 			UUID newMemberUUID = UUID.fromString(newMemberId);
+			UUID instigatorUUID = UUID.fromString(instigatorId);
 
-			if (roomsMap.containsKey(roomUUID))
+			if (!roomsMap.containsKey(roomUUID))
 			{
 				logger.error("Room with room Id: " + roomId + " does not exists.");
 				return false;
@@ -183,7 +188,8 @@ public class RoomServiceImpl implements RoomService
 			}
 
 			existingRoom.addMember(newMemberUUID);
-			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_MEMBER, newMemberUUID));
+			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_MEMBER, newMemberUUID, instigatorUUID));
+			roomRepository.save(existingRoom);
 			return true;
 		}
 		catch(IllegalArgumentException iae)
@@ -194,12 +200,13 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean removeMember(String roomId, String memberId, String instigator)
+	public boolean removeMember(String roomId, String memberId, String instigatorId)
 	{
 		try
 		{
 			UUID roomUUID = UUID.fromString(roomId);
 			UUID memberUUID = UUID.fromString(memberId);
+			UUID instigatorUUID = UUID.fromString(instigatorId);
 
 			if (!roomsMap.containsKey(roomUUID))
 			{
@@ -215,7 +222,8 @@ public class RoomServiceImpl implements RoomService
 			}
 
 			existingRoom.getMembers().removeIf(memberUUID::equals);
-			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_MEMBER, memberUUID));
+			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.REMOVE_MEMBER, memberUUID, instigatorUUID));
+			roomRepository.save(existingRoom);
 			return true;
 		}
 		catch(IllegalArgumentException iae)
@@ -266,7 +274,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public boolean addChat(ChatMessage chatMessage)
+	public Optional<List<ChatMessage>> addChat(ChatMessage chatMessage)
 	{
 		try
 		{
@@ -274,23 +282,24 @@ public class RoomServiceImpl implements RoomService
 			if(!roomsMap.containsKey(roomUUID))
 			{
 				logger.error("Room with room Id: " + roomUUID + " does not exists.");
-				return false;
+				return Optional.empty();
 			}
 
 			Room existingRoom = roomsMap.get(roomUUID);
 			if(!existingRoom.getMembers().contains(chatMessage.getAuthorId()) && !existingRoom.getAdministrators().contains(chatMessage.getAuthorId()))
 			{
 				logger.error("Author with Id: " + chatMessage.getAuthorId() + " is not a member or an administrator of room with Id: " + roomUUID);
-				return false;
+				return Optional.empty();
 			}
 
 			existingRoom.addChatMessage(chatMessage);
-			return true;
+			roomRepository.save(existingRoom);
+			return Optional.of(existingRoom.getConversation());
 		}
 		catch(IllegalArgumentException iae)
 		{
 			logger.error(iae.getMessage());
-			return false;
+			return Optional.empty();
 		}
 	}
 

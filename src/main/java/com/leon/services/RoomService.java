@@ -25,7 +25,7 @@ public interface RoomService
 
 	Optional<List<UUID>> getMembers(String roomId);
 
-	boolean addChat(ChatMessage chatMessage);
+	Optional<List<ChatMessage>> addChat(ChatMessage chatMessage);
 
 	boolean deactivateRoom(String roomId, String instigatorId);
 
