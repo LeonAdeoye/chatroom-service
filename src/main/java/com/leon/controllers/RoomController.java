@@ -249,24 +249,24 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addMember", method={POST})
-	ResponseEntity<Room> addMember(@RequestParam String roomId, @RequestParam String newMemberId, @RequestParam String instigatorId)
+	ResponseEntity<List<UUID>> addMember(@RequestParam String roomId, @RequestParam String newMemberId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding a new member to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(newMemberId == null || newMemberId.isEmpty())
 		{
 			logger.error("newMemberId cannot be null or an empty string when adding a new member to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(instigatorId == null || instigatorId.isEmpty())
 		{
 			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to add a new member with ID: " + newMemberId + " to a room with ID: " + roomId + " by user with ID: " + instigatorId);
@@ -274,15 +274,15 @@ public class RoomController
 		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
 		{
 			logger.error("The instigator is not a valid administrator of room Id: " + roomId);
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
-		Optional<Room> result = this.roomService.addMember(roomId, newMemberId, instigatorId);
+		Optional<List<UUID>> result = this.roomService.addMember(roomId, newMemberId, instigatorId);
 
 		if(result.isPresent())
 			return ResponseEntity.ok(result.get());
 		else
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 	}
 
 	@CrossOrigin
@@ -325,24 +325,24 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addAdmin", method={POST})
-	ResponseEntity<Room> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId, @RequestParam String instigatorId)
+	ResponseEntity<List<UUID>> addAdmin(@RequestParam String roomId, @RequestParam String newAdminId, @RequestParam String instigatorId)
 	{
 		if(roomId == null || roomId.isEmpty())
 		{
 			logger.error("roomId cannot be null or an empty string when adding admin to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(newAdminId == null || newAdminId.isEmpty())
 		{
 			logger.error("newAdminId cannot be null or an empty string when adding admin to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		if(instigatorId == null || instigatorId.isEmpty())
 		{
 			logger.error("instigatorId cannot be null or an empty string when adding a new member to a room.");
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to add a new admin with ID: " + newAdminId + " to a room with ID: " + roomId);
@@ -350,15 +350,15 @@ public class RoomController
 		if(!this.roomService.isValidAdministrator(roomId, instigatorId))
 		{
 			logger.error("The instigator is not a valid administrator of room with ID: " + roomId);
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
-		Optional<Room> result = this.roomService.addAdmin(roomId, newAdminId, instigatorId);
+		Optional<List<UUID>> result = this.roomService.addAdmin(roomId, newAdminId, instigatorId);
 
 		if(result.isPresent())
 			return ResponseEntity.ok(result.get());
 		else
-			return ResponseEntity.badRequest().body(new Room());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 	}
 
 	@CrossOrigin

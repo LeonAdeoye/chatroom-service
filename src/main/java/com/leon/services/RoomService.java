@@ -15,9 +15,9 @@ public interface RoomService
 
 	boolean removeAdmin(String roomId, String adminId, String instigatorId);
 
-	Optional<Room> addAdmin(String roomId, String newAdminId, String instigatorId);
+	Optional<List<UUID>> addAdmin(String roomId, String newAdminId, String instigatorId);
 
-	Optional<Room> addMember(String roomId, String newMemberId, String instigatorId);
+	Optional<List<UUID>> addMember(String roomId, String newMemberId, String instigatorId);
 
 	boolean removeMember(String roomId, String memberId, String instigatorId);
 
