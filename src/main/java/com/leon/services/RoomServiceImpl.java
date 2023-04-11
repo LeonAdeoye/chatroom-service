@@ -156,7 +156,7 @@ public class RoomServiceImpl implements RoomService
 			existingRoom.addAdministrator(newAdminUUID);
 			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID, instigatorUUID));
 			roomRepository.save(existingRoom);
-			return Optional.of(existingRoom.getMembers());
+			return Optional.of(existingRoom.getAdministrators());
 		}
 		catch(IllegalArgumentException iae)
 		{
@@ -426,6 +426,11 @@ public class RoomServiceImpl implements RoomService
 	{
 		try
 		{
+			if(this.users.stream().anyMatch(user -> user.getFullName().equals(fullName)))
+			{
+				logger.error("The user with full name: " + fullName + " already exists.");
+				return Optional.empty();
+			}
 			User newUser = new User(fullName);
 			this.users.add(newUser);
 			userRepository.save(newUser);
