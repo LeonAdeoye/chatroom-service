@@ -448,20 +448,70 @@ public class RoomController
 
 	@CrossOrigin
 	@RequestMapping(value = "/addUser", method={POST})
-	ResponseEntity<User> addUser(@RequestParam String fullName)
+	ResponseEntity<List<User>> addUser(@RequestParam String fullName)
 	{
 		if(fullName == null || fullName.isEmpty())
 		{
 			logger.error("fullName cannot be null or an empty string when adding a new user.");
-			return ResponseEntity.badRequest().body(new User());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 		}
 
 		logger.info("Received request to add user with full name: " + fullName);
-		Optional<User> newUser = this.roomService.addUser(fullName);
+		Optional<List<User>> users = this.roomService.addUser(fullName);
 
-		if(newUser.isPresent())
-			return ResponseEntity.ok(newUser.get());
+		if(users.isPresent())
+			return ResponseEntity.ok(users.get());
 		else
-			return ResponseEntity.badRequest().body(new User());
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/closeRoom", method={PUT})
+	ResponseEntity<List<UUID>> addToClosedRooms(@RequestParam String userId, @RequestParam  String roomId)
+	{
+		if(userId == null || userId.isEmpty())
+		{
+			logger.error("userId cannot be null or an empty string when closing a room.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+		}
+
+		if(roomId == null || roomId.isEmpty())
+		{
+			logger.error("roomId cannot be null or an empty string when closing a room.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+		}
+
+		logger.info("Received request from user with ID: " + userId + " to close a room with ID: " + roomId);
+		Optional<List<UUID>> closedRooms = this.roomService.closeRoom(userId, roomId);
+
+		if(closedRooms.isPresent())
+			return ResponseEntity.ok(closedRooms.get());
+		else
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+	}
+
+	@CrossOrigin
+	@RequestMapping(value = "/addToFavourites", method={PUT})
+	ResponseEntity<List<UUID>> addToFavourites(@RequestParam String userId, @RequestParam  String roomId)
+	{
+		if(userId == null || userId.isEmpty())
+		{
+			logger.error("userId cannot be null or an empty string when adding a room to a user's favourites.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+		}
+
+		if(roomId == null || roomId.isEmpty())
+		{
+			logger.error("roomId cannot be null or an empty string when adding a room to a user's favourites.");
+			return ResponseEntity.badRequest().body(new ArrayList<>());
+		}
+
+		logger.info("Received request from user with ID: " + userId + " to add a room with ID: " + roomId + " to the user's favourites.");
+		Optional<List<UUID>> favouriteRooms = this.roomService.addToFavourites(userId, roomId);
+
+		if(favouriteRooms.isPresent())
+			return ResponseEntity.ok(favouriteRooms.get());
+		else
+			return ResponseEntity.badRequest().body(new ArrayList<>());
 	}
 }

@@ -1,5 +1,7 @@
 package com.leon.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class User
@@ -8,6 +10,8 @@ public class User
 	private String fullName;
 	private boolean isActive;
 	private boolean isValid;
+	private List<UUID> favouriteRooms;
+	private List<UUID> closedRooms;
 
 	public UUID getId()
 	{
@@ -49,12 +53,34 @@ public class User
 		this.isValid = isValid;
 	}
 
+	public List<UUID> getFavouriteRooms()
+	{
+		return favouriteRooms;
+	}
+
+	public void addToFavouriteRooms(UUID favouriteRoomId)
+	{
+		this.favouriteRooms.add(favouriteRoomId);
+	}
+
+	public List<UUID> getClosedRooms()
+	{
+		return closedRooms;
+	}
+
+	public void addToClosedRooms(UUID closedRoomId)
+	{
+		this.closedRooms.add(closedRoomId);
+	}
+
 	public User(UUID id, String fullName, boolean isActive, boolean isValid)
 	{
 		this.id = id;
 		this.fullName = fullName;
 		this.isActive = isActive;
 		this.isValid = isValid;
+		this.favouriteRooms = new ArrayList<>();
+		this.closedRooms = new ArrayList<>();
 	}
 
 	public User(String fullName)
@@ -63,6 +89,8 @@ public class User
 		this.fullName = fullName;
 		this.isActive = true;
 		this.isValid = true;
+		this.favouriteRooms = new ArrayList<>();
+		this.closedRooms = new ArrayList<>();
 	}
 
 	public User()
@@ -71,11 +99,13 @@ public class User
 		this.fullName = "";
 		this.isActive = true;
 		this.isValid = true;
+		this.favouriteRooms = new ArrayList<>();
+		this.closedRooms = new ArrayList<>();
 	}
 
 	@Override
 	public String toString()
 	{
-		return "User{" + "id='" + id + '\'' + ", fullName='" + fullName + '\'' + ", isActive='" + isActive + '\'' + ", isValid='" + isValid + '\'' + '}';
+		return "User{" + "id=" + id + ", fullName='" + fullName + '\'' + ", isActive=" + isActive + ", isValid=" + isValid + ", favouriteRooms=" + favouriteRooms + ", closedRooms=" + closedRooms + '}';
 	}
 }

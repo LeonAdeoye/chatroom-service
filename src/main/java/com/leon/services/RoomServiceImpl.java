@@ -422,7 +422,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public Optional<User> addUser(String fullName)
+	public Optional<List<User>> addUser(String fullName)
 	{
 		try
 		{
@@ -434,7 +434,7 @@ public class RoomServiceImpl implements RoomService
 			User newUser = new User(fullName);
 			this.users.add(newUser);
 			userRepository.save(newUser);
-			return Optional.of(newUser);
+			return Optional.of(this.users);
 		}
 		catch(Exception e)
 		{
@@ -463,5 +463,75 @@ public class RoomServiceImpl implements RoomService
 			logger.error(iae.getMessage());
 		}
 		return false;
+	}
+
+	@Override
+	public Optional<List<UUID>> addToFavourites(String userId, String roomId)
+	{
+		try
+		{
+			UUID roomUUID = UUID.fromString(roomId);
+			UUID userUUID = UUID.fromString(userId);
+
+			if (!this.roomsMap.containsKey(roomUUID))
+			{
+				logger.error("Room with ID: " + roomId + " does not exist.");
+				return Optional.empty();
+			}
+
+			Optional<User> userToUpdate = users.stream()
+					.filter(user -> userUUID.equals(user.getId()))
+					.findAny();
+
+			if(!userToUpdate.isPresent())
+			{
+				logger.error("User with ID: " + userId + " does not exist.");
+				return Optional.empty();
+			}
+
+			userToUpdate.get().addToFavouriteRooms(roomUUID);
+			userRepository.save(userToUpdate.get());
+			return Optional.of(userToUpdate.get().getFavouriteRooms());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+			return Optional.empty();
+		}
+	}
+
+	@Override
+	public Optional<List<UUID>> closeRoom(String userId, String roomId)
+	{
+		try
+		{
+			UUID roomUUID = UUID.fromString(roomId);
+			UUID userUUID = UUID.fromString(userId);
+
+			if (!this.roomsMap.containsKey(roomUUID))
+			{
+				logger.error("Room with ID: " + roomId + " does not exist.");
+				return Optional.empty();
+			}
+
+			Optional<User> userToUpdate = users.stream()
+					.filter(user -> userUUID.equals(user.getId()))
+					.findAny();
+
+			if(!userToUpdate.isPresent())
+			{
+				logger.error("User with ID: " + userId + " does not exist.");
+				return Optional.empty();
+			}
+
+			userToUpdate.get().addToClosedRooms(roomUUID);
+			userRepository.save(userToUpdate.get());
+			return Optional.of(userToUpdate.get().getClosedRooms());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			logger.error(iae.getMessage());
+			return Optional.empty();
+		}
 	}
 }

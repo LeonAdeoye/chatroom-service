@@ -39,11 +39,15 @@ public interface RoomService
 
 	List<User> getAllUsers();
 
-	Optional<User> addUser(String fullName);
+	Optional<List<User>> addUser(String fullName);
 
 	Map<UUID, String> getAllRooms();
 
 	void reload();
 
 	boolean isValidAdministrator(String roomId, String userId);
+
+	Optional<List<UUID>> addToFavourites(String userId, String roomId);
+
+	Optional<List<UUID>> closeRoom(String userId, String roomId);
 }
