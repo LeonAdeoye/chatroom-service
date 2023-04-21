@@ -132,7 +132,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public Optional<List<UUID>> addAdmin(String roomId, String newAdminId, String instigatorId)
+	public Optional<Room> addAdmin(String roomId, String newAdminId, String instigatorId)
 	{
 		try
 		{
@@ -156,7 +156,7 @@ public class RoomServiceImpl implements RoomService
 			existingRoom.addAdministrator(newAdminUUID);
 			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_ADMIN, newAdminUUID, instigatorUUID));
 			roomRepository.save(existingRoom);
-			return Optional.of(existingRoom.getAdministrators());
+			return Optional.of(existingRoom);
 		}
 		catch(IllegalArgumentException iae)
 		{
@@ -166,7 +166,7 @@ public class RoomServiceImpl implements RoomService
 	}
 
 	@Override
-	public Optional<List<UUID>> addMember(String roomId, String newMemberId, String instigatorId)
+	public Optional<Room> addMember(String roomId, String newMemberId, String instigatorId)
 	{
 		try
 		{
@@ -190,7 +190,7 @@ public class RoomServiceImpl implements RoomService
 			existingRoom.addMember(newMemberUUID);
 			existingRoom.getActivities().add(new Activity(Activity.ActivityEnum.ADD_MEMBER, newMemberUUID, instigatorUUID));
 			roomRepository.save(existingRoom);
-			return Optional.of(existingRoom.getMembers());
+			return Optional.of(existingRoom);
 		}
 		catch(IllegalArgumentException iae)
 		{
