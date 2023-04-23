@@ -29,12 +29,13 @@
     </parent>
 
     <dependencies>
-<!--        To run swagger: http://localhost:8080/swagger-ui/-->
-<!--        <dependency> NEED VERSION spring boot 2.5 rather than 2.7
+        <!--        To run swagger: http://localhost:8080/swagger-ui/-->
+        <!--To sue Swagger you need version spring boot 2.5 rather than 2.7 -->
+        <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
             <version>${spring.fox.version}</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-boot-starter</artifactId>
@@ -44,10 +45,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-<!--        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-graphql</artifactId>
-        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -87,7 +84,7 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-<!--        Add this line because test cases were not running: https://stackoverflow.com/questions/31681855/maven-not-running-spring-boot-tests-->
+        <!--        Add this line because test cases were not running: https://stackoverflow.com/questions/31681855/maven-not-running-spring-boot-tests-->
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>

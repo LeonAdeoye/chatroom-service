@@ -426,7 +426,8 @@ public class RoomServiceImpl implements RoomService
 	{
 		try
 		{
-			if(this.users.stream().anyMatch(user -> user.getFullName().equals(fullName)))
+			logger.info(String.valueOf(users));
+			if(this.getAllUsers().stream().anyMatch(user -> user.getFullName().equals(fullName)))
 			{
 				logger.error("The user with full name: " + fullName + " already exists.");
 				return Optional.empty();

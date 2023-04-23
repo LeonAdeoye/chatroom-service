@@ -11,6 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
+
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
@@ -31,7 +34,7 @@ public class RoomServiceTest
 	public void whenPassedValidFullName_addUser_shouldCallSaveMethodOfRepositoryMock()
 	{
 		// Act
-		roomService.addUser("Horatio Adeoye");
+		roomService.addUser(UUID.randomUUID().toString());
 		// Assert
 		verify(userRepositoryMock, times(1)).save(Mockito.any(User.class));
 	}
