@@ -3,12 +3,22 @@ package com.leon;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @Configuration
 @EnableWebSocketMessageBroker // Enables WebSocket message handling, backed by a message broker.
 public class ChatWebSocketConfiguration implements WebSocketMessageBrokerConfigurer
 {
+	@Override
+	public void registerStompEndpoints(StompEndpointRegistry registry)
+	{
+		// Register STOMP endpoint at "/chatroom".
+		// This endpoint will be used by the chat apps to connect to STOMP.
+		// At this endpoint, the handover to websocket protocol from http protocol is done.
+		registry.addEndpoint("/chatroom").setAllowedOrigins("*").withSockJS();
+	}
+
 	// The method configureMessageBroker() enables a simple memory-based message broker to carry
 	// the messages back to the client on destinations prefixed with "/chat-topic".
 	@Override
