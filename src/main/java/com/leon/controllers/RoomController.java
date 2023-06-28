@@ -11,6 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,6 +28,22 @@ public class RoomController
 
 	@Autowired
 	RoomService roomService;
+
+	@MessageMapping("/message")
+	@SendToUser("/chat-topic/message")
+	public String processMessageFromClient(@Payload String message) throws Exception
+	{
+		String name = new ObjectMapper().readValue(message, JsonNode.class).get("name").asText();
+		logger.debug(name);
+		return name;
+	}
+
+	@MessageExceptionHandler
+	@SendToUser("/chat-topic/errors")
+	public String handleException(Throwable exception)
+	{
+		return exception.getMessage();
+	}
 
 	@CrossOrigin
 	@RequestMapping(value = "/heartbeat", method={GET})
