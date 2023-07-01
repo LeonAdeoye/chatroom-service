@@ -1,36 +1,24 @@
 package com.leon;
 
+import com.leon.services.SocketTextHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
-@EnableWebSocketMessageBroker // Enables WebSocket message handling, backed by a message broker.
-public class ChatWebSocketConfiguration implements WebSocketMessageBrokerConfigurer
+@EnableWebSocket
+public class ChatWebSocketConfiguration implements WebSocketConfigurer
 {
+	@Autowired
+	private SocketTextHandler socketTextHandler;
+	@Value("${client.app.allowed.origins:*}")
+	private String allowedOrigins;
+	@Value("${handler.destination.from.client.to.server:/stomp}")
+	private String handlerDestinationFromClientToServer;
 	@Override
-	public void registerStompEndpoints(StompEndpointRegistry registry)
+	public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry)
 	{
-		// Register STOMP endpoint at "/chatroom".
-		// This endpoint will be used by the chat apps to connect to STOMP.
-		// At this endpoint, the handover to websocket protocol from http protocol is done.
-		registry.addEndpoint("/chatroom").setAllowedOrigins("*").withSockJS();
-	}
-
-	// The method configureMessageBroker() enables a simple memory-based message broker to carry
-	// the messages back to the client on destinations prefixed with "/chat-topic".
-	@Override
-	public void configureMessageBroker(MessageBrokerRegistry registry)
-	{
-		// Set application destination prefix: /chat-app.
-		// The client will send messages at this endpoint.
-		// For example, if client sends message at /chat-app/message,
-		// the endpoint configured at /message in the spring controller will be invoked.
-		registry.setApplicationDestinationPrefixes("/chat-app");
-		// Enable a simple message broker and configure a prefix to filter destinations targeting the broker.
-		// The client app will subscribe messages at endpoints starting with these configured endpoint.
-		registry.enableSimpleBroker("/chat-topic");
+		webSocketHandlerRegistry.addHandler(socketTextHandler, handlerDestinationFromClientToServer).setAllowedOrigins(allowedOrigins);
 	}
 }

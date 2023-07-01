@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -18,6 +19,9 @@ import static java.util.Optional.of;
 public class RoomServiceImpl implements RoomService
 {
 	private static final Logger logger = LoggerFactory.getLogger(RoomServiceImpl.class);
+
+	@Autowired
+	SocketTextHandler socketTextHandler;
 
 	@Autowired
 	RoomRepository roomRepository;
@@ -288,17 +292,23 @@ public class RoomServiceImpl implements RoomService
 			Room existingRoom = roomsMap.get(roomUUID);
 			if(!existingRoom.getMembers().contains(chatMessage.getAuthorId()) && !existingRoom.getAdministrators().contains(chatMessage.getAuthorId()))
 			{
-				logger.error("Author with Id: " + chatMessage.getAuthorId() + " is not a member or an administrator of room with Id: " + roomUUID);
+				logger.error("Author with Id: {} is not a member or an administrator of room with Id: {}", chatMessage.getAuthorId(), roomUUID);
 				return Optional.empty();
 			}
 
 			existingRoom.addChatMessage(chatMessage);
 			roomRepository.save(existingRoom);
+			socketTextHandler.sendMessageToAllClients(chatMessage.toString());
 			return Optional.of(existingRoom.getConversation());
 		}
 		catch(IllegalArgumentException iae)
 		{
 			logger.error(iae.getMessage());
+			return Optional.empty();
+		}
+		catch(IOException ioe)
+		{
+			logger.error("Exception thrown will sending message to all clients: {}", ioe.getMessage());
 			return Optional.empty();
 		}
 	}
