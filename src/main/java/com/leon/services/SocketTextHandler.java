@@ -8,27 +8,26 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class SocketTextHandler extends TextWebSocketHandler
 {
-	private List<WebSocketSession> sessions = new ArrayList<>();
+	private List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 	private static final Logger logger = LoggerFactory.getLogger(SocketTextHandler.class);
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception
 	{
 		sessions.add(session);
-		logger.info("Connection established. Added session ID: {}, total count of sessions is now: {}", session.getId(), sessions.size());
+		logger.info("WebSocket connection established. Added session ID: {}, total count of sessions is now: {}", session.getId(), sessions.size());
 	}
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception
 	{
-		logger.info("Connection closed");
+		logger.info("Websocket connection closed for session ID: {}", session.getId());
 		sessions.remove(session);
 	}
 
@@ -37,7 +36,7 @@ public class SocketTextHandler extends TextWebSocketHandler
 		for (WebSocketSession session : sessions)
 		{
 			session.sendMessage(new TextMessage(message));
-			logger.info("Sent message: {} to session ID: {}", message, session.getId());
+			logger.info("Sent message: {} to WebSocket session ID: {}", message, session.getId());
 		}
 	}
 }
