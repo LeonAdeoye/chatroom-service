@@ -1,11 +1,15 @@
 package com.leon.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 
 @JsonIgnoreProperties
 public class ChatMessage
@@ -15,6 +19,7 @@ public class ChatMessage
 	@JsonProperty("authorId")
 	private UUID authorId;
 	@JsonProperty("timeStamp")
+	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime timeStamp;
 	@JsonProperty("content")
 	private String content;
@@ -107,7 +112,25 @@ public class ChatMessage
 	@Override
 	public String toString()
 	{
-		return "ChatMessage{" + "id=" + id + ", authorId=" + authorId + ", timeStamp=" + timeStamp + ", content='" + content + '\'' + ", roomId=" + roomId + '}';
+		return "ChatMessage { id: " + id + ", authorId: " + authorId + ", timeStamp: " + timeStamp + ", content: '" + content + "', roomId: " + roomId + " }";
 	}
+
+	public String toJSON()
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+		String json = "";
+		try
+		{
+			json = ow.writeValueAsString(this);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return json;
+	}
+
 
 }

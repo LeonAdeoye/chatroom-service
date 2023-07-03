@@ -298,7 +298,7 @@ public class RoomServiceImpl implements RoomService
 
 			existingRoom.addChatMessage(chatMessage);
 			roomRepository.save(existingRoom);
-			socketTextHandler.sendMessageToAllClients(chatMessage.toString());
+			socketTextHandler.sendMessageToAllClients(chatMessage);
 			return Optional.of(existingRoom.getConversation());
 		}
 		catch(IllegalArgumentException iae)
