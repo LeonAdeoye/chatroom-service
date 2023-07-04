@@ -18,6 +18,8 @@ public class Activity
 	private LocalDateTime timestamp;
 	@JsonProperty("instigatorId")
 	private UUID instigatorId;
+	@JsonProperty("id")
+	private UUID id;
 
 	public UUID getInstigatorId()
 	{
@@ -54,6 +56,16 @@ public class Activity
 		return timestamp;
 	}
 
+	public UUID getId()
+	{
+		return id;
+	}
+
+	public void setId(UUID id)
+	{
+		this.id = id;
+	}
+
 	public void setTimestamp(LocalDateTime timestamp)
 	{
 		this.timestamp = timestamp;
@@ -65,6 +77,7 @@ public class Activity
 		this.thirdPartyId = thirdPartyId;
 		this.instigatorId = instigatorId;
 		this.timestamp = LocalDateTime.now();
+		this.id = UUID.randomUUID();
 	}
 
 	public Activity()
@@ -73,6 +86,7 @@ public class Activity
 		this.thirdPartyId = UUID.randomUUID();
 		this.timestamp = LocalDateTime.now();
 		this.instigatorId = UUID.randomUUID();
+		this.id = UUID.randomUUID();
 	}
 
 	@Override
@@ -80,19 +94,24 @@ public class Activity
 	{
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		Activity activity1 = (Activity) o;
-		return getActivity() == activity1.getActivity() && Objects.equals(getThirdPartyId(), activity1.getThirdPartyId()) && Objects.equals(getTimestamp(), activity1.getTimestamp()) && Objects.equals(getInstigatorId(), activity1.getInstigatorId());
+		Activity otherActivity = (Activity) o;
+
+		return Objects.equals(getId(), otherActivity.getId())
+				&& getActivity() == otherActivity.getActivity()
+				&& Objects.equals(getThirdPartyId(), otherActivity.getThirdPartyId())
+				&& Objects.equals(getTimestamp(), otherActivity.getTimestamp())
+				&& Objects.equals(getInstigatorId(), otherActivity.getInstigatorId());
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return Objects.hash(getActivity(), getThirdPartyId(), getTimestamp(), getInstigatorId());
+		return Objects.hash(getActivity(), getThirdPartyId(), getTimestamp(), getInstigatorId(), getId());
 	}
 
 	@Override
 	public String toString()
 	{
-		return "Activity{" + "activity=" + activity + ", thirdPartyId=" + thirdPartyId + ", timestamp=" + timestamp + ", instigatorId=" + instigatorId + '}';
+		return "Activity{" + "activity=" + activity + ", thirdPartyId=" + thirdPartyId + ", timestamp=" + timestamp + ", instigatorId=" + instigatorId + ", id=" + id + '}';
 	}
 }
